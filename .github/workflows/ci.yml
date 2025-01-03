@@ -124,28 +124,25 @@ jobs:
         sleep 10 # Allow services to initialize
         docker ps
 
-    - name: List repository files
-      run: ls -R
-
     # - name: Build and run services using Docker Compose
     #   run: |
     #     docker-compose up --build -d
     #     docker-compose ps
 
-    - name: Wait for services to be ready
-      run: |
-        until [ "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q math-db))" == "healthy" ]; do
-          echo "Waiting for math-db to be healthy..."
-          sleep 5
-        done
-        until [ "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q geography-db))" == "healthy" ]; do
-          echo "Waiting for geography-db to be healthy..."
-          sleep 5
-        done
-        until [ "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q postgres))" == "healthy" ]; do
-          echo "Waiting for postgres to be healthy..."
-          sleep 5
-        done
+    # - name: Wait for services to be ready
+    #   run: |
+    #     until [ "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q math-db))" == "healthy" ]; do
+    #       echo "Waiting for math-db to be healthy..."
+    #       sleep 5
+    #     done
+    #     until [ "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q geography-db))" == "healthy" ]; do
+    #       echo "Waiting for geography-db to be healthy..."
+    #       sleep 5
+    #     done
+    #     until [ "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q postgres))" == "healthy" ]; do
+    #       echo "Waiting for postgres to be healthy..."
+    #       sleep 5
+    #     done
 
     - name: Run unit tests and generate coverage reports
       run: |
