@@ -1,0 +1,193 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      # MongoDB for math-db
+      math-db:
+        image: mongo:4.4.6
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongo --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --health-start-period=30s
+
+      # MongoDB for geography-db
+      geography-db:
+        image: mongo:4.4.6
+        ports:
+          - 27018:27017
+        options: >-
+          --health-cmd="mongo --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --health-start-period=30s
+
+      # PostgreSQL for history-db
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: questions
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U user -d questions"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: List repository files
+      run: ls -R
+    
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update && sudo apt-get install -y docker-compose
+    
+    - name: List all containers
+      run: docker ps -a
+    
+    - name: List running containers with health status
+      run: docker ps --filter health=unhealthy
+    
+    - name: Fetch logs for math-db
+      run: docker logs math-db || echo "math-db container logs could not be fetched."
+    
+    
+    - name: Fetch Docker Compose logs
+      run: docker-compose logs    
+
+    - name: Wait for MongoDB services to be ready
+      run: |
+        echo "Waiting for MongoDB services to be ready..."
+        for i in {1..10}; do
+          if docker ps --filter health=healthy | grep -q mongo; then
+            echo "MongoDB is ready!"
+            break
+          fi
+          echo "MongoDB is not ready yet. Retrying in 10 seconds..."
+          sleep 10
+        done
+        docker ps --filter health=unhealthy
+
+    - name: Debug MongoDB logs if unhealthy
+      if: failure()
+      run: |
+        echo "Fetching logs for math-db..."
+        docker logs math-db
+        echo "Fetching logs for geography-db..."
+        docker logs geography-db
+      
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    # - name: Install dependencies for all services
+    #   run: |
+    #     cd frontend && npm install
+    #     cd ../services/api-gateway && npm install
+    #     cd ../math-service && npm install
+    #     cd ../history-service && npm install
+    #     cd ../geography-service && npm install
+    - name: Install dependencies for API Gateway
+      run: |
+        cd services/api-gateway
+        npm install
+
+    - name: Install dependencies for Math Service
+      run: |
+        cd services/math-service
+        npm install
+
+    - name: Install dependencies for History Service
+      run: |
+        cd services/history-service
+        npm install
+
+    - name: Install dependencies for Geography Service
+      run: |
+        cd services/geography-service
+        npm install
+
+    - name: Install dependencies for Frontend
+      run: |
+        cd frontend
+        npm install --legacy-peer-deps
+
+
+    - name: Lint all services
+      run: |
+        cd frontend && npm run lint
+        cd ../services/api-gateway && npm run lint
+        cd ../math-service && npm run lint
+        cd ../history-service && npm run lint
+        cd ../geography-service && npm run lint
+
+    - name: Wait for services to be ready
+      run: |
+        sleep 10 # Allow services to initialize
+        docker ps
+
+    - name: Build and run services using Docker Compose
+      run: |
+        docker-compose up --build -d
+        docker-compose ps
+
+    - name: Wait for services to be ready
+      run: |
+        until [ "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q math-db))" == "healthy" ]; do
+          echo "Waiting for math-db to be healthy..."
+          sleep 5
+        done
+        until [ "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q geography-db))" == "healthy" ]; do
+          echo "Waiting for geography-db to be healthy..."
+          sleep 5
+        done
+        until [ "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q postgres))" == "healthy" ]; do
+          echo "Waiting for postgres to be healthy..."
+          sleep 5
+        done
+
+        - name: Run unit tests and generate coverage reports
+        run: |
+          cd frontend && npm test -- --coverage
+          cd ../services/api-gateway && npm test -- --coverage
+          cd ../math-service && npm test -- --coverage
+          cd ../history-service && npm test -- --coverage
+          cd ../geography-service && npm test -- --coverage
+        env:
+          CI: true
+  
+    - name: Check test coverage
+      run: |
+          cd frontend && npx nyc report --check-coverage --lines=20
+          cd ../services/api-gateway && npx nyc report --check-coverage --lines=20
+          cd ../math-service && npx nyc report --check-coverage --lines=20
+          cd ../history-service && npx nyc report --check-coverage --lines=20
+          cd ../geography-service && npx nyc report --check-coverage --lines=20
+
+    - name: Run integration tests
+      run: npm run test:integration
+
+    - name: Stop and clean up
+      run: docker-compose down

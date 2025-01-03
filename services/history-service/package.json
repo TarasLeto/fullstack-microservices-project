@@ -1,0 +1,46 @@
+{
+  "name": "history-service",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint 'src/**/*.js'",
+    "test": "jest --coverage",
+    "start": "ts-node src/server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.13.1",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.2",
+    "nodemon": "^3.1.9",
+    "nyc": "^17.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "nyc": {
+    "reporter": [
+      "text",
+      "lcov"
+    ],
+    "include": [
+      "src/**/*.js"
+    ],
+    "exclude": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/test/**"
+    ],
+    "all": true,
+    "check-coverage": true,
+    "lines": 20
+  }
+}

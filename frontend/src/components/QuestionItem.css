@@ -1,0 +1,27 @@
+.question-item ul {
+  list-style: none;
+  padding: 0;
+}
+
+.question-item li {
+  cursor: pointer;
+  margin: 5px 0;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.question-item li:hover {
+  background-color: #f0f0f0;
+}
+
+.correct {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.wrong {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+}

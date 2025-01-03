@@ -1,0 +1,157 @@
+version: '3.8'
+services:
+  api-gateway:
+    build: ./services/api-gateway
+    ports:
+      - "4000:4000"
+    depends_on:
+      - math-service
+      - history-service
+      - geography-service
+    environment:
+      - MATH_SERVICE_URL=http://math-service:4001
+      - HISTORY_SERVICE_URL=http://history-service:4002
+      - GEOGRAPHY_SERVICE_URL=http://geography-service:4003
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  math-service:
+    build: ./services/math-service
+    ports:
+      - "4001:4001"
+    environment:
+      - MONGO_URL=mongodb://math-db:27017/questions
+    depends_on:
+      - math-db
+    networks:
+      - app-network
+      - db-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - math-db:/data/db
+
+  math-db:
+    container_name: math-db
+    image: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - db-network
+    healthcheck:
+      test: ["CMD", "mongo", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - math-db:/data/db
+
+  history-service:
+    build: ./services/history-service
+    ports:
+      - "4002:4002"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=questions
+      - DB_HOST=history-db
+      - DB_PORT=5432
+    depends_on:
+      - history-db
+    networks:
+      - app-network
+      - db-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - history-db:/data/db
+
+  history-db:
+    image: postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: questions
+    ports:
+      - "5433:5432"
+    networks:
+      - db-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - history-db:/data/db
+
+  geography-service:
+    build: ./services/geography-service
+    ports:
+      - "4003:4003"
+    environment:
+      - MONGO_URL=mongodb://geography-db:27017/questions
+    depends_on:
+      - geography-db
+    networks:
+      - app-network
+      - db-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - geography-db:/data/db
+
+  geography-db:
+    container_name: geography-db
+    image: mongo
+    ports:
+      - "27018:27017"
+    networks:
+      - db-network
+    healthcheck:
+      test: ["CMD", "mongo", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - geography-db:/data/db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:4000/api
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  math-db:
+  history-db:
+  geography-db:
+
+networks:
+  app-network:
+    driver: bridge
+  db-network:
+    driver: bridge
