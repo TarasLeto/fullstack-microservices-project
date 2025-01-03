@@ -104,7 +104,7 @@ jobs:
 
     - name: Install dependencies for all services
       run: |
-        cd frontend && npm install
+        cd frontend && npm install --legacy-peer-deps
         cd ../services/api-gateway && npm install
         cd ../math-service && npm install
         cd ../history-service && npm install
