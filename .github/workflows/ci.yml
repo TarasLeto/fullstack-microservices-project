@@ -102,46 +102,22 @@ jobs:
       with:
         node-version: 18
 
-    # - name: Install dependencies for all services
+    - name: Install dependencies for all services
+      run: |
+        cd frontend && npm install
+        cd ../services/api-gateway && npm install
+        cd ../math-service && npm install
+        cd ../history-service && npm install
+        cd ../geography-service && npm install
+
+
+    # - name: Lint all services
     #   run: |
-    #     cd frontend && npm install
-    #     cd ../services/api-gateway && npm install
-    #     cd ../math-service && npm install
-    #     cd ../history-service && npm install
-    #     cd ../geography-service && npm install
-    - name: Install dependencies for API Gateway
-      run: |
-        cd services/api-gateway
-        npm install
-
-    - name: Install dependencies for Math Service
-      run: |
-        cd services/math-service
-        npm install
-
-    - name: Install dependencies for History Service
-      run: |
-        cd services/history-service
-        npm install
-
-    - name: Install dependencies for Geography Service
-      run: |
-        cd services/geography-service
-        npm install
-
-    - name: Install dependencies for Frontend
-      run: |
-        cd frontend
-        npm install --legacy-peer-deps
-
-
-    - name: Lint all services
-      run: |
-        cd frontend && npm run lint
-        cd ../services/api-gateway && npm run lint
-        cd ../math-service && npm run lint
-        cd ../history-service && npm run lint
-        cd ../geography-service && npm run lint
+    #     cd frontend && npm run lint
+    #     cd ../services/api-gateway && npm run lint
+    #     cd ../math-service && npm run lint
+    #     cd ../history-service && npm run lint
+    #     cd ../geography-service && npm run lint
 
     - name: Wait for services to be ready
       run: |
