@@ -124,10 +124,13 @@ jobs:
         sleep 10 # Allow services to initialize
         docker ps
 
-    - name: Build and run services using Docker Compose
-      run: |
-        docker-compose up --build -d
-        docker-compose ps
+    - name: List repository files
+      run: ls -R
+
+    # - name: Build and run services using Docker Compose
+    #   run: |
+    #     docker-compose up --build -d
+    #     docker-compose ps
 
     - name: Wait for services to be ready
       run: |
@@ -144,14 +147,14 @@ jobs:
           sleep 5
         done
 
-        - name: Run unit tests and generate coverage reports
-        run: |
-          cd frontend && npm test -- --coverage
-          cd ../services/api-gateway && npm test -- --coverage
-          cd ../math-service && npm test -- --coverage
-          cd ../history-service && npm test -- --coverage
-          cd ../geography-service && npm test -- --coverage
-        env:
+    - name: Run unit tests and generate coverage reports
+      run: |
+        cd frontend && npm test -- --coverage
+        cd ../services/api-gateway && npm test -- --coverage
+        cd ../math-service && npm test -- --coverage
+        cd ../history-service && npm test -- --coverage
+        cd ../geography-service && npm test -- --coverage
+      env:
           CI: true
   
     - name: Check test coverage
