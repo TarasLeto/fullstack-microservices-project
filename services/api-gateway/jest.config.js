@@ -8,7 +8,7 @@ module.exports = {
   },
   testRegex: '.*\\.test\\.ts$',
   collectCoverage: true,
-  coverageDirectory: './coverage',
+  coverageDirectory: './coverage/api-gateway',
   coverageReporters: ['text', 'lcov', 'json'],
   coverageThreshold: {
     global: {

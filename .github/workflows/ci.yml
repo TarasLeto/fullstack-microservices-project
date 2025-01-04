@@ -130,7 +130,9 @@ jobs:
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v2
       with:
-        file: ./coverage/lcov-report/index.html
+        file: |
+          frontend/coverage/frontend/lcov-report/lcov-report.json
+          services/api-gateway/coverage/api-gateway/lcov-report/lcov-report.json
 
     - name: Stop and clean up
       run: docker-compose down

@@ -9,7 +9,7 @@ module.exports = {
   },
   testRegex: '.*\\.(test|spec)\\.(ts|tsx)$',
   collectCoverage: true,
-  coverageDirectory: './coverage',
+  coverageDirectory: './coverage/frontend',
   coverageReporters: ['text', 'lcov', 'json'],
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
