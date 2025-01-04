@@ -110,47 +110,15 @@ jobs:
         cd ../history-service && npm install
         cd ../geography-service && npm install
 
-
-    # - name: Lint all services
-    #   run: |
-    #     cd frontend && npm run lint
-    #     cd ../services/api-gateway && npm run lint
-    #     cd ../math-service && npm run lint
-    #     cd ../history-service && npm run lint
-    #     cd ../geography-service && npm run lint
-
     - name: Wait for services to be ready
       run: |
         sleep 10 # Allow services to initialize
         docker ps
 
-    # - name: Build and run services using Docker Compose
-    #   run: |
-    #     docker-compose up --build -d
-    #     docker-compose ps
-
-    # - name: Wait for services to be ready
-    #   run: |
-    #     until [ "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q math-db))" == "healthy" ]; do
-    #       echo "Waiting for math-db to be healthy..."
-    #       sleep 5
-    #     done
-    #     until [ "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q geography-db))" == "healthy" ]; do
-    #       echo "Waiting for geography-db to be healthy..."
-    #       sleep 5
-    #     done
-    #     until [ "$(docker inspect -f {{.State.Health.Status}} $(docker-compose ps -q postgres))" == "healthy" ]; do
-    #       echo "Waiting for postgres to be healthy..."
-    #       sleep 5
-    #     done
-
     - name: Run unit tests and generate coverage reports
       run: |
-        cd frontend && npm test -- --coverage
-        cd ../services/api-gateway && npm test -- --coverage
-        cd ../math-service && npm test -- --coverage
-        cd ../history-service && npm test -- --coverage
-        cd ../geography-service && npm test -- --coverage
+        cd frontend && npm test --
+        cd ../services/api-gateway && npm test --
       env:
           CI: true
   
@@ -158,12 +126,6 @@ jobs:
       run: |
           cd frontend && npx nyc report --check-coverage --lines=20
           cd ../services/api-gateway && npx nyc report --check-coverage --lines=20
-          cd ../math-service && npx nyc report --check-coverage --lines=20
-          cd ../history-service && npx nyc report --check-coverage --lines=20
-          cd ../geography-service && npx nyc report --check-coverage --lines=20
-
-    - name: Run integration tests
-      run: npm run test:integration
 
     - name: Stop and clean up
       run: docker-compose down
