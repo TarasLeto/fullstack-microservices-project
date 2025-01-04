@@ -12,6 +12,11 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    env:
+      MATH_SERVICE_URL: http://math-service:4001
+      HISTORY_SERVICE_URL: http://history-service:4002
+      GEOGRAPHY_SERVICE_URL: http://geography-service:4003
+
     services:
       # MongoDB for math-db
       math-db:
