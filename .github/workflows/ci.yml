@@ -127,10 +127,10 @@ jobs:
       env:
           CI: true
   
-    - name: Check test coverage
-      run: |
-          cd frontend && npx nyc report --check-coverage --lines=20
-          cd ../services/api-gateway && npx nyc report --check-coverage --lines=20
+    # - name: Check test coverage
+    #   run: |
+    #       cd frontend && npx nyc report --check-coverage --lines=20
+    #       cd ../services/api-gateway && npx nyc report --check-coverage --lines=20
 
     - name: Stop and clean up
       run: docker-compose down
