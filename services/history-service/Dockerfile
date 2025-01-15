@@ -1,5 +1,5 @@
 #Stage1-initial build
-FROM node:16-alpine as build
+FROM node:16-alpine AS build
 
 # Create app directory
 WORKDIR /usr/src/app/history-service
