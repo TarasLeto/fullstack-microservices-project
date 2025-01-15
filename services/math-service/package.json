@@ -6,6 +6,7 @@
     "lint": "eslint 'src/**/*.js'",
     "test": "jest --coverage",
     "start": "ts-node src/server.ts"
+    "build": "echo 'No build needed for this service'"
   },
   "dependencies": {
     "cors": "^2.8.5",
