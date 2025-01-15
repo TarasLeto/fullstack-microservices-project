@@ -15,7 +15,7 @@ COPY . .
 
 # If you have a build step (e.g., TypeScript or bundling), add it here
 # Uncomment the following line if you use TypeScript or another build tool
-# RUN npm run build
+RUN npm run build
 
 # Stage 2: Create a lightweight production image
 FROM node:16-alpine
