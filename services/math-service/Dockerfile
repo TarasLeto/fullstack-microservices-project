@@ -1,33 +1,42 @@
-# Stage 1: Build dependencies and transpile (if needed)
-FROM node:16-alpine AS build
+FROM node:17.9.0 AS base
 
-# Set the working directory
 WORKDIR /usr/src/app
 
-# Copy package files first to leverage Docker cache
 COPY package*.json ./
+    
+RUN npm install
 
-# Install production dependencies
-RUN npm install --production
-
-# Copy the application source
 COPY . .
 
-# If you have a build step (e.g., TypeScript or bundling), add it here
-# Uncomment the following line if you use TypeScript or another build tool
-RUN npm run build
+# for lint
 
-# Stage 2: Create a lightweight production image
-FROM node:16-alpine
+FROM base as linter
 
-# Set the working directory
 WORKDIR /usr/src/app
 
-# Copy only the built files from the previous stage
-COPY --from=build /usr/src/app .
+RUN npm run lint
 
-# Expose the application port
-EXPOSE 4001
+# for build
 
-# Start the application
-CMD ["npm", "start"]
+FROM linter as builder
+
+WORKDIR /usr/src/app
+
+RUN npm run build
+
+
+# for production
+
+FROM node:17.9.0-alpine3.15
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install --only=production
+
+COPY --from=builder /usr/src/app/dist ./
+
+EXPOSE 3000
+
+ENTRYPOINT ["node","./app.js"]
