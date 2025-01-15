@@ -11,7 +11,7 @@ COPY src/geography-service/package*.json ./
 RUN npm install --production
 
 # Copy the rest of the application source
-COPY src/api-gateway ./
+COPY src/geography-service ./
 
 # Build the application
 RUN npm run build
