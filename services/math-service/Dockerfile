@@ -1,4 +1,4 @@
-FROM node:12.18.1
+FROM node:12.18.1 AS builder
  
 WORKDIR /app
  
@@ -8,6 +8,12 @@ COPY package-lock.json package-lock.json
 RUN npm install
  
 COPY . .
+
+FROM node:alpine AS production
+
+WORKDIR /app
+
+COPY --from=builder .
 
 EXPOSE 4001
 
