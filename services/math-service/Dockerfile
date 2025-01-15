@@ -1,29 +1,33 @@
-# Stage 1 - Build Stage
+# Stage 1: Build dependencies and transpile (if needed)
 FROM node:16-alpine AS build
 
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Copy only the package files first to leverage Docker's caching
-COPY src/math-service/package*.json ./
+# Copy package files first to leverage Docker cache
+COPY package*.json ./
 
-# Install dependencies
+# Install production dependencies
 RUN npm install --production
 
-# Copy the rest of the application source
-COPY src/math-service ./
+# Copy the application source
+COPY . .
 
-# Build the application
-RUN npm run build
+# If you have a build step (e.g., TypeScript or bundling), add it here
+# Uncomment the following line if you use TypeScript or another build tool
+# RUN npm run build
 
-# Stage 2 - Production Image
-FROM nginx:alpine
+# Stage 2: Create a lightweight production image
+FROM node:16-alpine
 
-# Copy build files to the Nginx web server directory
-COPY --from=build /usr/src/app/build /usr/share/nginx/html
+# Set the working directory
+WORKDIR /usr/src/app
 
-# Expose the API Gateway port
+# Copy only the built files from the previous stage
+COPY --from=build /usr/src/app .
+
+# Expose the application port
 EXPOSE 4001
 
-# Run Nginx in the foreground
-CMD ["nginx", "-g", "daemon off;"]
+# Start the application
+CMD ["npm", "start"]
