@@ -20,7 +20,9 @@ services:
       retries: 3
 
   math-service:
-    build: ./services/math-service
+    build: 
+      context: ./services/math-service
+      dockerfile: Dockerfile
     ports:
       - "4001:4001"
     environment:
