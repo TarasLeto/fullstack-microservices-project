@@ -1,27 +1,29 @@
-#Stage1-initial build
+# Stage 1 - Build Stage
 FROM node:16-alpine AS build
 
-# Create app directory
-WORKDIR /usr/src/app/api-gateway
+# Set the working directory
+WORKDIR /usr/src/app
 
-# Copy package.json files to the working directory
-COPY package*.json ./
+# Copy only the package files first to leverage Docker's caching
+COPY src/api-gateway/package*.json ./
 
-# Install app dependencies
-RUN npm install
+# Install dependencies
+RUN npm install --production
 
-# Copy the source files
-COPY . .
+# Copy the rest of the application source
+COPY src/api-gateway ./
 
-# Build the React app for production
+# Build the application
 RUN npm run build
 
-#Stage2-Making our Image  smaller
-
+# Stage 2 - Production Image
 FROM nginx:alpine
 
-# Copy build files to Nginx
-COPY --from=build /usr/src/app/api-gateway/build /usr/share/nginx/html
-EXPOSE 4000
-CMD ["nginx", "-g", "daemon off;"]
+# Copy build files to the Nginx web server directory
+COPY --from=build /usr/src/app/build /usr/share/nginx/html
 
+# Expose the API Gateway port
+EXPOSE 4000
+
+# Run Nginx in the foreground
+CMD ["nginx", "-g", "daemon off;"]
