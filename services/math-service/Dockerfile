@@ -8,5 +8,7 @@ COPY package-lock.json package-lock.json
 RUN npm install
  
 COPY . .
- 
+
+EXPOSE 4001
+
 CMD [ "node", "server.js" ]
