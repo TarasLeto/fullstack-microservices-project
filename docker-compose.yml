@@ -1,6 +1,8 @@
 services:
   api-gateway:
-    build: ./services/api-gateway
+    build: 
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
     ports:
       - "4000:4000"
     depends_on:
@@ -57,7 +59,9 @@ services:
       - math-db:/data/db
 
   history-service:
-    build: ./services/history-service
+    build:  
+      context: ./services/history-service
+      dockerfile: Dockerfile
     ports:
       - "4002:4002"
     environment:
@@ -98,7 +102,9 @@ services:
       - history-db:/data/db
 
   geography-service:
-    build: ./services/geography-service
+    build: 
+      context: ./services/geography-service
+      dockerfile: Dockerfile
     ports:
       - "4003:4003"
     environment:
@@ -133,7 +139,9 @@ services:
       - geography-db:/data/db
 
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
       - "3000:80"
     environment:
