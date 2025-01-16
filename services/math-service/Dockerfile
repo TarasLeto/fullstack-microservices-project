@@ -1,4 +1,4 @@
-FROM node:12.18.1 AS builder
+FROM node:alpine AS builder
  
 WORKDIR /app
  
@@ -17,4 +17,4 @@ COPY --from=builder .
 
 EXPOSE 4001
 
-CMD [ "node", "server.js" ]
+CMD [ "node", "src/server.ts" ]
