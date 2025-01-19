@@ -9,10 +9,8 @@ services:
       - math-service
       - history-service
       - geography-service
-    environment:
-      - MATH_SERVICE_URL=http://math-service:4001
-      - HISTORY_SERVICE_URL=http://history-service:4002
-      - GEOGRAPHY_SERVICE_URL=http://geography-service:4003
+    env_file:
+      - ./api-gateway.env
     networks:
       - app-network
     healthcheck:
@@ -27,8 +25,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "4001:4001"
-    environment:
-      - MONGO_URL=mongodb://math-db:27017/questions
+    env_file:
+      - math-service.env
     depends_on:
       - math-db
     networks:
@@ -64,12 +62,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "4002:4002"
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=questions
-      - DB_HOST=history-db
-      - DB_PORT=5432
+    env_file:
+      - ./history-service.env
     depends_on:
       - history-db
     networks:
@@ -85,16 +79,14 @@ services:
 
   history-db:
     image: postgres
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: questions
+    env_file:
+      - ./history-service.env
     ports:
       - "5433:5432"
     networks:
       - db-network
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "user"]
+      test: ["CMD", "pg_isready", "-U","${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -107,8 +99,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "4003:4003"
-    environment:
-      - MONGO_URL=mongodb://geography-db:27017/questions
+    env_file:
+      - ./geography-service.env
     depends_on:
       - geography-db
     networks:
@@ -144,8 +136,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:80"
-    environment:
-      - REACT_APP_API_URL=http://localhost:4000/api
+    env_file:
+      - ./frontend.env
     networks:
       - app-network
     healthcheck:
