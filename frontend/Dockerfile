@@ -1,48 +1,34 @@
-# Stage 1: Development (ts-node)
-FROM node:18-alpine AS development
+# Stage 1: Build the frontend app
+FROM node:18-alpine AS build
 
-# Set the working directory
 WORKDIR /app
 
-# Copy only the package.json and package-lock.json for efficient caching
-COPY package*.json ./
+# Copy package.json and package-lock.json
+COPY package.json package-lock.json ./
 
-# Install all dependencies, including devDependencies
+# Install dependencies
 RUN npm install
 
-# Copy the entire application to the container
-COPY . .
+# Copy all source code
+COPY . ./
 
-# Install ts-node, TypeScript, and any other necessary dev dependencies
-RUN npm install --save-dev ts-node typescript
+# Build the app for production
+RUN npm run build
 
-# Compile TypeScript to generate dist/ directory
-RUN npx tsc  # This will use the TypeScript compiler to create the dist/ folder
-
-# Expose the application port
-EXPOSE 3000
-
-# Start the application using ts-node (development mode)
-CMD ["npm", "run", "start"]  # This will run ts-node src/server.ts
-
-# Stage 2: Production (compiled JavaScript)
+# Stage 2: Run the React app
 FROM node:18-alpine AS production
 
-# Set the working directory
 WORKDIR /app
 
-# Copy only the package.json and package-lock.json to avoid reinstalling dependencies
-COPY package*.json ./
-
-# Install production dependencies only
+# Install dependencies (we only need production dependencies)
+COPY package.json package-lock.json ./
 RUN npm install --production
 
-# Copy the compiled files (dist/) from the builder stage
-COPY --from=development /app/dist /app/dist
+# Copy the build files from the build stage
+COPY --from=build /app/build /app/build
 
-# Expose the application port for production
+# Expose port 3000 for the frontend
 EXPOSE 3000
 
-# Start the application using the compiled JavaScript (from dist/)
-CMD ["node", "dist/server.js"]  # Runs the compiled server.js file
-
+# Command to run the app on port 3000
+CMD ["npm", "start"]
