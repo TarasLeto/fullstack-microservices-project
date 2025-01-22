@@ -1,26 +1,28 @@
-# Stage 1: Development (ts-node for development)
 FROM node:18-alpine AS development
 
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json for efficient caching
+# Copy only the package.json and package-lock.json for efficient caching
 COPY package*.json ./
 
 # Install all dependencies, including devDependencies
 RUN npm install
 
-# Copy the entire application source code
+# Copy the entire application to the container
 COPY . .
 
-# Install TypeScript and ts-node as dev dependencies
+# Install ts-node, TypeScript, and any other necessary dev dependencies
 RUN npm install --save-dev ts-node typescript
 
-# Expose the application port for development
-EXPOSE 4003
+# Compile TypeScript to generate dist/ directory
+RUN npx tsc  # This will use the TypeScript compiler to create the dist/ folder
 
-# Start the application in development mode using ts-node
-CMD ["npm", "run", "start"]  # This uses ts-node to run src/app.ts
+# Expose the application port
+EXPOSE 4001
+
+# Start the application using ts-node (development mode)
+CMD ["npm", "run", "start"]  # This will run ts-node src/server.ts
 
 # Stage 2: Production (compiled JavaScript)
 FROM node:18-alpine AS production
@@ -28,17 +30,17 @@ FROM node:18-alpine AS production
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json for efficient caching
+# Copy only the package.json and package-lock.json to avoid reinstalling dependencies
 COPY package*.json ./
 
 # Install production dependencies only
 RUN npm install --production
 
-# Copy the compiled files (dist/) from the development stage
+# Copy the compiled files (dist/) from the builder stage
 COPY --from=development /app/dist /app/dist
 
 # Expose the application port for production
-EXPOSE 4003
+EXPOSE 4001
 
-# Start the application in production mode using the compiled JavaScript
-CMD ["node", "dist/app.js"]  # Runs the compiled app.js file from dist/
+# Start the application using the compiled JavaScript (from dist/)
+CMD ["node", "dist/app.js"]  # Runs the compiled server.js file
