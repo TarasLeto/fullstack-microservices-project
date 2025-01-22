@@ -9,8 +9,10 @@ services:
       - math-service
       - history-service
       - geography-service
-    env_file:
-      - ./api-gateway.env
+    environment:
+      - MATH_SERVICE_URL=${MATH_SERVICE_URL}
+      - HISTORY_SERVICE_URL=${HISTORY_SERVICE_URL}
+      - GEOGRAPHY_SERVICE_URL=${GEOGRAPHY_SERVICE_URL}
     networks:
       - app-network
     healthcheck:
@@ -25,8 +27,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "4001:4001"
-    env_file:
-      - math-service.env
+    environment:
+      - MONGO_URL=${MATH_DB_MONGO_URL}
     depends_on:
       - math-db
     networks:
@@ -40,30 +42,18 @@ services:
     volumes:
       - math-db:/data/db
 
-  math-db:
-    container_name: math-db
-    image: mongo
-    ports:
-      - "27017:27017"
-    networks:
-      - db-network
-    healthcheck:
-      test: ["CMD", "mongo", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-    volumes:
-      - math-db:/data/db
-
   history-service:
     build:  
       context: ./services/history-service
       dockerfile: Dockerfile
     ports:
       - "4002:4002"
-    env_file:
-      - ./history-service.env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - DB_HOST=${HISTORY_DB_HOST}
+      - DB_PORT=${HISTORY_DB_PORT}
     depends_on:
       - history-db
     networks:
@@ -77,30 +67,14 @@ services:
     volumes:
       - history-db:/data/db
 
-  history-db:
-    image: postgres
-    env_file:
-      - ./history-service.env
-    ports:
-      - "5433:5432"
-    networks:
-      - db-network
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U","${POSTGRES_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    volumes:
-      - history-db:/data/db
-
   geography-service:
     build: 
       context: ./services/geography-service
       dockerfile: Dockerfile
     ports:
       - "4003:4003"
-    env_file:
-      - ./geography-service.env
+    environment:
+      - MONGO_URL=${GEOGRAPHY_DB_MONGO_URL}
     depends_on:
       - geography-db
     networks:
@@ -114,30 +88,14 @@ services:
     volumes:
       - geography-db:/data/db
 
-  geography-db:
-    container_name: geography-db
-    image: mongo
-    ports:
-      - "27018:27017"
-    networks:
-      - db-network
-    healthcheck:
-      test: ["CMD", "mongo", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-    volumes:
-      - geography-db:/data/db
-
   frontend:
     build: 
       context: ./frontend
       dockerfile: Dockerfile
     ports:
       - "3000:80"
-    env_file:
-      - ./frontend.env
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL}
     networks:
       - app-network
     healthcheck:
