@@ -40,9 +40,6 @@ RUN npm install --production
 # Copy the compiled application from the development stage
 COPY --from=development /app/dist /app/dist
 
-# Copy any other necessary files (e.g., .env) to the container
-COPY .env .env
-
 # Expose the application port for production
 EXPOSE 4001
 
