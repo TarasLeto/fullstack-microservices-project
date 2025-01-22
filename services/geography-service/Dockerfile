@@ -1,47 +1,42 @@
-# Stage 1: Development (ts-node)
+# Stage 1: Development
 FROM node:18-alpine AS development
 
 # Set the working directory
 WORKDIR /app
 
-# Copy only the package.json and package-lock.json for efficient caching
+# Copy package.json and package-lock.json for efficient dependency installation
 COPY package*.json ./
 
-# Install all dependencies, including devDependencies
+# Install all dependencies (including devDependencies)
 RUN npm install
 
-# Copy the entire application to the container
+# Copy the rest of the application code
 COPY . .
-
-# Install ts-node, TypeScript, and any other necessary dev dependencies
-RUN npm install --save-dev ts-node typescript
-
-# Compile TypeScript to generate dist/ directory
-RUN npx tsc  # This will use the TypeScript compiler to create the dist/ folder
 
 # Expose the application port
 EXPOSE 4003
 
-# Start the application using ts-node (development mode)
-CMD ["npm", "run", "start"]  # This will run ts-node src/server.ts
+# Default command: Use nodemon for hot-reloading in development
+CMD ["npm", "run", "dev"]
 
-# Stage 2: Production (compiled JavaScript)
+# Stage 2: Production
 FROM node:18-alpine AS production
 
 # Set the working directory
 WORKDIR /app
 
-# Copy only the package.json and package-lock.json to avoid reinstalling dependencies
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install production dependencies only
+# Install only production dependencies
 RUN npm install --production
 
-# Copy the compiled files (dist/) from the builder stage
+# Copy compiled files and essential configurations from the development stage
 COPY --from=development /app/dist /app/dist
+COPY .env .env
 
-# Expose the application port for production
+# Expose the application port
 EXPOSE 4003
 
-# Start the application using the compiled JavaScript (from dist/)
-CMD ["node", "dist/server.js"]  # Runs the compiled server.js file
+# Command: Use the compiled JavaScript files for production
+CMD ["npm", "start"]
