@@ -19,7 +19,7 @@ RUN npm install --save-dev ts-node typescript
 RUN npx tsc  # This will use the TypeScript compiler to create the dist/ folder
 
 # Expose the application port
-EXPOSE 4001
+EXPOSE 4002
 
 # Start the application using ts-node (development mode)
 CMD ["npm", "run", "start"]  # This will run ts-node src/server.ts
