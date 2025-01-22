@@ -33,7 +33,7 @@ RUN npm install --production
 
 # Copy compiled files and essential configurations from the development stage
 COPY --from=development /app/dist /app/dist
-COPY .env .env
+
 
 # Expose the application port
 EXPOSE 4003
