@@ -40,9 +40,6 @@ RUN npm install --production
 # Copy compiled application code from the development stage
 COPY --from=development /app/dist /app/dist
 
-# Copy any additional configuration files, e.g., .env
-COPY .env .env
-
 # Expose the application port
 EXPOSE 4002
 
