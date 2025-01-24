@@ -30,16 +30,16 @@ jobs:
     - name: Install dependencies
       run: |
         cd frontend && npm install
-        cd ./services/api-gateway && npm install
-        cd ./services/math-service && npm install
-        cd ./services/history-service && npm install
-        cd ./services/geography-service && npm install
+        cd ../services/api-gateway && npm install
+        cd ../services/math-service && npm install
+        cd ../services/history-service && npm install
+        cd ../services/geography-service && npm install
 
     # 4. Run unit tests
     - name: Run tests
       run: |
         cd frontend && npm test
-        cd ./services/api-gateway && npm test
+        cd ../services/api-gateway && npm test
 
     # 5. Log in to Docker Hub (or another registry)
     - name: Log in to Docker Hub
