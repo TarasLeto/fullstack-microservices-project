@@ -1,138 +1,82 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  build-and-test:
+  build-test-deploy:
     runs-on: ubuntu-latest
 
     env:
+      # Define service URLs
       MATH_SERVICE_URL: http://math-service:4001
       HISTORY_SERVICE_URL: http://history-service:4002
       GEOGRAPHY_SERVICE_URL: http://geography-service:4003
 
-    services:
-      # MongoDB for math-db
-      math-db:
-        image: mongo:4.4.6
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd="mongo --quiet --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
-          --health-start-period=30s
-
-      # MongoDB for geography-db
-      geography-db:
-        image: mongo:4.4.6
-        ports:
-          - 27018:27017
-        options: >-
-          --health-cmd="mongo --quiet --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
-          --health-start-period=30s
-
-      # PostgreSQL for history-db
-      postgres:
-        image: postgres:latest
-        env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: questions
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U user -d questions"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-
     steps:
+    # 1. Checkout the repository
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: List repository files
-      run: ls -R
-    
-    - name: Install Docker Compose
-      run: |
-        sudo apt-get update && sudo apt-get install -y docker-compose
-    
-    - name: List all containers
-      run: docker ps -a
-    
-    - name: List running containers with health status
-      run: docker ps --filter health=unhealthy
-    
-    - name: Fetch logs for math-db
-      run: docker logs math-db || echo "math-db container logs could not be fetched."
-    
-    
-    - name: Fetch Docker Compose logs
-      run: docker-compose logs    
-
-    - name: Wait for MongoDB services to be ready
-      run: |
-        echo "Waiting for MongoDB services to be ready..."
-        for i in {1..10}; do
-          if docker ps --filter health=healthy | grep -q mongo; then
-            echo "MongoDB is ready!"
-            break
-          fi
-          echo "MongoDB is not ready yet. Retrying in 10 seconds..."
-          sleep 10
-        done
-        docker ps --filter health=unhealthy
-
-    - name: Debug MongoDB logs if unhealthy
-      if: failure()
-      run: |
-        echo "Fetching logs for math-db..."
-        docker logs math-db
-        echo "Fetching logs for geography-db..."
-        docker logs geography-db
-      
+    # 2. Set up Node.js
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: 18
 
-    - name: Install dependencies for all services
+    # 3. Install dependencies
+    - name: Install dependencies
       run: |
-        cd frontend && npm install --legacy-peer-deps
+        cd frontend && npm install
         cd ../services/api-gateway && npm install
-        cd ../math-service && npm install
-        cd ../history-service && npm install
-        cd ../geography-service && npm install
+        cd ../services/math-service && npm install
+        cd ../services/history-service && npm install
+        cd ../services/geography-service && npm install
 
-    - name: Wait for services to be ready
+    # 4. Run unit tests
+    - name: Run tests
       run: |
-        sleep 10 # Allow services to initialize
-        docker ps
+        cd frontend && npm test
+        cd ../services/api-gateway && npm test
 
-    - name: Run unit tests and generate coverage reports
-      run: |
-        cd frontend && npm test --
-        cd ../services/api-gateway && npm test --
-      env:
-          CI: true
-  
-    - name: Upload Coverage to Codecov
-      uses: codecov/codecov-action@v2
+    # 5. Log in to Docker Hub (or another registry)
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
       with:
-        file: |
-          frontend/coverage/frontend/lcov-report/lcov-report.json
-          services/api-gateway/coverage/api-gateway/lcov-report/lcov-report.json
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Stop and clean up
-      run: docker-compose down
+    # 6. Build Docker images
+    - name: Build Docker Images
+      run: |
+        docker build -t your-username/math-service:latest ./services/math-service
+        docker build -t your-username/history-service:latest ./services/history-service
+        docker build -t your-username/geography-service:latest ./services/geography-service
+        docker build -t your-username/api-gateway:latest ./services/api-gateway
+        docker build -t your-username/frontend:latest ./frontend
+
+    # 7. Push Docker images to the registry
+    - name: Push Docker Images
+      run: |
+        docker push your-username/math-service:latest
+        docker push your-username/history-service:latest
+        docker push your-username/geography-service:latest
+        docker push your-username/api-gateway:latest
+        docker push your-username/frontend:latest
+
+    # 8. Deploy to Docker Swarm
+    - name: Deploy to Docker Swarm
+      uses: appleboy/ssh-action@v0.1.8
+      with:
+        host: ${{ secrets.SWARM_MANAGER_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          docker pull your-username/math-service:latest
+          docker pull your-username/history-service:latest
+          docker pull your-username/geography-service:latest
+          docker pull your-username/api-gateway:latest
+          docker pull your-username/frontend:latest
+          docker stack deploy -c docker-stack.yml my-stack
