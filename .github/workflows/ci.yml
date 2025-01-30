@@ -16,20 +16,18 @@ jobs:
       GEOGRAPHY_SERVICE_URL: http://geography-service:4003
 
     steps:
-    
     # 1️⃣ Checkout the repository
     - name: Checkout repository
       uses: actions/checkout@v3
-      with:
-        fetch-depth: 0  # Ensures full repo is cloned
 
-    # 2️⃣ Debug repo structure (to verify paths)
-    - name: Debug Repository Structure
+    # 2️⃣ Debug absolute paths
+    - name: Debug Absolute Paths
       run: |
-        echo "Listing all files and folders:"
-        ls -R
-        echo "Finding all directories:"
-        find . -type d
+        echo "GitHub workspace: $GITHUB_WORKSPACE"
+        echo "Listing all files in the workspace directory:"
+        ls -R $GITHUB_WORKSPACE
+        echo "Finding all directories in the workspace:"
+        find $GITHUB_WORKSPACE -type d
 
     # 3️⃣ Set up Node.js
     - name: Set up Node.js
@@ -37,26 +35,26 @@ jobs:
       with:
         node-version: 18
 
-    # 4️⃣ Install dependencies (with cleanup to avoid conflicts)
+    # 4️⃣ Install dependencies (use absolute paths)
     - name: Install dependencies
       run: |
-        cd frontend && rm -rf node_modules package-lock.json && npm install
-        cd ../services/api-gateway && rm -rf node_modules package-lock.json && npm install
-        cd ../services/math-service && rm -rf node_modules package-lock.json && npm install
-        cd ../services/history-service && rm -rf node_modules package-lock.json && npm install
-        cd ../services/geography-service && rm -rf node_modules package-lock.json && npm install
+        cd $GITHUB_WORKSPACE/frontend && rm -rf node_modules package-lock.json && npm install
+        cd $GITHUB_WORKSPACE/services/api-gateway && rm -rf node_modules package-lock.json && npm install
+        cd $GITHUB_WORKSPACE/services/math-service && rm -rf node_modules package-lock.json && npm install
+        cd $GITHUB_WORKSPACE/services/history-service && rm -rf node_modules package-lock.json && npm install
+        cd $GITHUB_WORKSPACE/services/geography-service && rm -rf node_modules package-lock.json && npm install
 
     # 5️⃣ Verify Jest is installed
     - name: Verify Jest Installation
       run: |
-        cd frontend && npx jest --version || echo "Jest not installed in frontend!"
-        cd ../services/api-gateway && npx jest --version || echo "Jest not installed in API Gateway!"
+        cd $GITHUB_WORKSPACE/frontend && npx jest --version || echo "Jest not installed in frontend!"
+        cd $GITHUB_WORKSPACE/services/api-gateway && npx jest --version || echo "Jest not installed in API Gateway!"
 
-    # 6️⃣ Run tests using npx Jest
+    # 6️⃣ Run Jest Tests
     - name: Run Jest Tests
       run: |
-        cd frontend && npx jest
-        cd ../services/api-gateway && npx jest
+        cd $GITHUB_WORKSPACE/frontend && npx jest
+        cd $GITHUB_WORKSPACE/services/api-gateway && npx jest
 
     # 7️⃣ Log in to Docker Hub (or another registry)
     - name: Log in to Docker Hub
@@ -68,11 +66,11 @@ jobs:
     # 8️⃣ Build Docker images
     - name: Build Docker Images
       run: |
-        docker build -t your-username/math-service:latest ./services/math-service
-        docker build -t your-username/history-service:latest ./services/history-service
-        docker build -t your-username/geography-service:latest ./services/geography-service
-        docker build -t your-username/api-gateway:latest ./services/api-gateway
-        docker build -t your-username/frontend:latest ./frontend
+        docker build -t your-username/math-service:latest $GITHUB_WORKSPACE/services/math-service
+        docker build -t your-username/history-service:latest $GITHUB_WORKSPACE/services/history-service
+        docker build -t your-username/geography-service:latest $GITHUB_WORKSPACE/services/geography-service
+        docker build -t your-username/api-gateway:latest $GITHUB_WORKSPACE/services/api-gateway
+        docker build -t your-username/frontend:latest $GITHUB_WORKSPACE/frontend
 
     # 9️⃣ Push Docker images to the registry
     - name: Push Docker Images
