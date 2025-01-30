@@ -16,73 +16,84 @@ jobs:
       GEOGRAPHY_SERVICE_URL: http://geography-service:4003
 
     steps:
-      # 1. Checkout the repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Ensures the full repo is cloned
+    
+    # 1️⃣ Checkout the repository
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Ensures full repo is cloned
 
-      # 2. List repository files (debugging)
-      - name: List repository files
-        run: ls -R
+    # 2️⃣ Debug repo structure (to verify paths)
+    - name: Debug Repository Structure
+      run: |
+        echo "Listing all files and folders:"
+        ls -R
+        echo "Finding all directories:"
+        find . -type d
 
-      # 3. Set up Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+    # 3️⃣ Set up Node.js
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
 
-      # 4. Install dependencies
-      - name: Install dependencies
-        run: |
-          cd frontend && npm install
-          [[ -d services/api-gateway ]] && cd ../services/api-gateway && npm install || echo "api-gateway directory not found!"
-          [[ -d services/math-service ]] && cd ../services/math-service && npm install || echo "math-service directory not found!"
-          [[ -d services/history-service ]] && cd ../services/history-service && npm install || echo "history-service directory not found!"
-          [[ -d services/geography-service ]] && cd ../services/geography-service && npm install || echo "geography-service directory not found!"
+    # 4️⃣ Install dependencies (with cleanup to avoid conflicts)
+    - name: Install dependencies
+      run: |
+        cd frontend && rm -rf node_modules package-lock.json && npm install
+        cd ../services/api-gateway && rm -rf node_modules package-lock.json && npm install
+        cd ../services/math-service && rm -rf node_modules package-lock.json && npm install
+        cd ../services/history-service && rm -rf node_modules package-lock.json && npm install
+        cd ../services/geography-service && rm -rf node_modules package-lock.json && npm install
 
-      # 5. Run unit tests
-      - name: Run tests
-        run: |
-          cd frontend && npm test
-          cd ../services/api-gateway && npm test
+    # 5️⃣ Verify Jest is installed
+    - name: Verify Jest Installation
+      run: |
+        cd frontend && npx jest --version || echo "Jest not installed in frontend!"
+        cd ../services/api-gateway && npx jest --version || echo "Jest not installed in API Gateway!"
 
-      # 6. Log in to Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    # 6️⃣ Run tests using npx Jest
+    - name: Run Jest Tests
+      run: |
+        cd frontend && npx jest
+        cd ../services/api-gateway && npx jest
 
-      # 7. Build Docker images
-      - name: Build Docker Images
-        run: |
-          docker build -t your-username/math-service:latest ./services/math-service
-          docker build -t your-username/history-service:latest ./services/history-service
-          docker build -t your-username/geography-service:latest ./services/geography-service
-          docker build -t your-username/api-gateway:latest ./services/api-gateway
-          docker build -t your-username/frontend:latest ./frontend
+    # 7️⃣ Log in to Docker Hub (or another registry)
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 8. Push Docker images to the registry
-      - name: Push Docker Images
-        run: |
-          docker push your-username/math-service:latest
-          docker push your-username/history-service:latest
-          docker push your-username/geography-service:latest
-          docker push your-username/api-gateway:latest
-          docker push your-username/frontend:latest
+    # 8️⃣ Build Docker images
+    - name: Build Docker Images
+      run: |
+        docker build -t your-username/math-service:latest ./services/math-service
+        docker build -t your-username/history-service:latest ./services/history-service
+        docker build -t your-username/geography-service:latest ./services/geography-service
+        docker build -t your-username/api-gateway:latest ./services/api-gateway
+        docker build -t your-username/frontend:latest ./frontend
 
-      # 9. Deploy to Docker Swarm
-      - name: Deploy to Docker Swarm
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.SWARM_MANAGER_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            docker pull your-username/math-service:latest
-            docker pull your-username/history-service:latest
-            docker pull your-username/geography-service:latest
-            docker pull your-username/api-gateway:latest
-            docker pull your-username/frontend:latest
-            docker stack deploy -c docker-stack.yml my-stack
+    # 9️⃣ Push Docker images to the registry
+    - name: Push Docker Images
+      run: |
+        docker push your-username/math-service:latest
+        docker push your-username/history-service:latest
+        docker push your-username/geography-service:latest
+        docker push your-username/api-gateway:latest
+        docker push your-username/frontend:latest
+
+    # 🔟 Deploy to Docker Swarm
+    - name: Deploy to Docker Swarm
+      uses: appleboy/ssh-action@v0.1.8
+      with:
+        host: ${{ secrets.SWARM_MANAGER_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          docker pull your-username/math-service:latest
+          docker pull your-username/history-service:latest
+          docker pull your-username/geography-service:latest
+          docker pull your-username/api-gateway:latest
+          docker pull your-username/frontend:latest
+          docker stack deploy -c docker-stack.yml my-stack
