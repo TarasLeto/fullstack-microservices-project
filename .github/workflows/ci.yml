@@ -37,4 +37,52 @@ jobs:
         run: |
           cd frontend && npm install
           [[ -d services/api-gateway ]] && cd ../services/api-gateway && npm install || echo "api-gateway directory not found!"
-          [[ -d services/math-service ]] && cd ../
+          [[ -d services/math-service ]] && cd ../services/math-service && npm install || echo "math-service directory not found!"
+          [[ -d services/history-service ]] && cd ../services/history-service && npm install || echo "history-service directory not found!"
+          [[ -d services/geography-service ]] && cd ../services/geography-service && npm install || echo "geography-service directory not found!"
+
+      # 5. Run unit tests
+      - name: Run tests
+        run: |
+          cd frontend && npm test
+          cd ../services/api-gateway && npm test
+
+      # 6. Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 7. Build Docker images
+      - name: Build Docker Images
+        run: |
+          docker build -t your-username/math-service:latest ./services/math-service
+          docker build -t your-username/history-service:latest ./services/history-service
+          docker build -t your-username/geography-service:latest ./services/geography-service
+          docker build -t your-username/api-gateway:latest ./services/api-gateway
+          docker build -t your-username/frontend:latest ./frontend
+
+      # 8. Push Docker images to the registry
+      - name: Push Docker Images
+        run: |
+          docker push your-username/math-service:latest
+          docker push your-username/history-service:latest
+          docker push your-username/geography-service:latest
+          docker push your-username/api-gateway:latest
+          docker push your-username/frontend:latest
+
+      # 9. Deploy to Docker Swarm
+      - name: Deploy to Docker Swarm
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.SWARM_MANAGER_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker pull your-username/math-service:latest
+            docker pull your-username/history-service:latest
+            docker pull your-username/geography-service:latest
+            docker pull your-username/api-gateway:latest
+            docker pull your-username/frontend:latest
+            docker stack deploy -c docker-stack.yml my-stack
