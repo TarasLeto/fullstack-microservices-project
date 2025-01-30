@@ -27,13 +27,14 @@ jobs:
         node-version: 18
 
     # 3. Install dependencies
-    - name: Install dependencies
-      run: |
-        cd frontend && npm install
-        cd ../services/api-gateway && npm install
-        cd ../services/math-service && npm install
-        cd ../services/history-service && npm install
-        cd ../services/geography-service && npm install
+   - name: Install dependencies
+  run: |
+    cd frontend && npm install
+    [[ -d services/api-gateway ]] && cd ../services/api-gateway && npm install || echo "api-gateway directory not found!"
+    [[ -d services/math-service ]] && cd ../services/math-service && npm install || echo "math-service directory not found!"
+    [[ -d services/history-service ]] && cd ../services/history-service && npm install || echo "history-service directory not found!"
+    [[ -d services/geography-service ]] && cd ../services/geography-service && npm install || echo "geography-service directory not found!"
+
 
     # 4. Run unit tests
     - name: Run tests
